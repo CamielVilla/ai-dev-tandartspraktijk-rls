@@ -105,10 +105,9 @@ export type ArtsAfspraak = {
 /**
  * Alle afspraken van één arts, oplopend op datum en tijd.
  *
- * Draait met de sessie van de ingelogde gebruiker, dus RLS ("Arts leest eigen
- * reserveringen") laat alleen diens eigen afspraken door. Geef daarnaast
- * altijd het id van de ingelogde arts door (uit lib/auth), nooit een id uit
- * de url of een formulier.
+ * Draait met de sessie van de ingelogde gebruiker, dus RLS bepaalt welke
+ * rijen er terugkomen. Geef daarnaast altijd het id van de ingelogde arts
+ * door (uit lib/auth), nooit een id uit de url of een formulier.
  */
 export async function getAfsprakenVanArts(artsId: number): Promise<ArtsAfspraak[]> {
     const supabase = await createSupabaseServerClient();

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars -- startpunt: deze imports en helpers gebruik je in opdracht 2 en 4. Haal deze regel weg als je klaar bent. */
+/* eslint-disable @typescript-eslint/no-unused-vars -- startpunt: deze imports en helpers gebruik je in stap 2. Haal deze regel weg als je klaar bent. */
 "use server";
 
 import {redirect} from "next/navigation";
@@ -17,18 +17,18 @@ export async function login(_vorigResultaat: LoginResultaat, formData: FormData)
         return {status: "error", melding: "Vul je e-mailadres en wachtwoord in.", email};
     }
 
-    // TODO opdracht 2: log de arts in bij Supabase.
+    // TODO stap 2: log de gebruiker in bij Supabase.
     //  - Maak een client met createSupabaseServerClient(). Die zet na het inloggen
     //    automatisch de sessie-cookies.
     //  - Gebruik de juiste functie van supabase.auth om in te loggen met e-mail en wachtwoord.
     //  - Gaat het mis? Geef dan een foutresultaat terug. loginFoutmelding()
     //    hieronder vertaalt de foutcode van Supabase naar een nette Nederlandse melding.
-    //  - Gaat het goed? Stuur de arts dan door naar /mijn-afspraken.
-    return {status: "error", melding: "Inloggen is nog niet gebouwd (opdracht 2).", email};
+    //  - Gaat het goed? Stuur de gebruiker dan door naar /mijn-afspraken.
+    return {status: "error", melding: "Inloggen is nog niet gebouwd (stap 2).", email};
 }
 
 export async function uitloggen(): Promise<void> {
-    // TODO opdracht 4: log de arts uit bij Supabase. Daarmee worden ook de sessie-cookies verwijderd.
+    // TODO stap 2: log de gebruiker uit bij Supabase. Daarmee worden ook de sessie-cookies verwijderd.
 
     redirect("/inloggen");
 }

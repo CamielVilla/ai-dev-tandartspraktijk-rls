@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars -- startpunt: deze import gebruik je in opdracht 3. Haal deze regel weg als je klaar bent. */
+/* eslint-disable @typescript-eslint/no-unused-vars -- startpunt: deze import gebruik je in stap 2. Haal deze regel weg als je klaar bent. */
 import "server-only";
 import {cache} from "react";
 import {redirect} from "next/navigation";
@@ -17,7 +17,7 @@ export type Arts = {
  * onderdelen van een pagina het vragen.
  */
 export const getIngelogdeArts = cache(async (): Promise<Arts | null> => {
-    // TODO opdracht 3: zoek uit wie er is ingelogd.
+    // TODO stap 2: zoek uit wie er is ingelogd.
     //  - Maak een client met createSupabaseServerClient().
     //  - Vraag de gebruiker op uit het token van de sessie. Er zijn meerdere
     //    functies in supabase.auth die iets over de sessie teruggeven. Kies er

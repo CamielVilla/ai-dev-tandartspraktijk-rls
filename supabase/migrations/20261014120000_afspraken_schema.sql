@@ -67,17 +67,22 @@ create table public.reserveringen (
 create index reserveringen_datum_arts_idx on public.reserveringen (datum, arts_id);
 
 -- -----------------------------------------------------------------------------
--- Row Level Security
+-- Toegang via de Data API
 --
--- RLS staat aan zonder policies: via de publieke (publishable/anon) key is er
--- dus nog niets te lezen of te schrijven. De Next.js-server gebruikt voorlopig
--- de secret key, die RLS omzeilt. Bij inloggen komen hier echte policies.
+-- Sinds 2026 maakt Supabase nieuwe tabellen niet meer automatisch bereikbaar
+-- voor de API. Zonder deze grants weigert Postgres elke query van de app,
+-- nog vóórdat Row Level Security aan de beurt is.
+--
+-- Let op: een grant zegt alleen dat een rol de tabel mag aanspreken. Welke
+-- rijen iemand mag zien of wijzigen, regel je met Row Level Security. Zolang
+-- RLS uit staat, kan iedereen met de publishable key dus alles in deze tabellen
+-- lezen.
 -- -----------------------------------------------------------------------------
 
-alter table public.arts enable row level security;
-alter table public.behandelingen enable row level security;
-alter table public.beschikbaarheid enable row level security;
-alter table public.reserveringen enable row level security;
+grant select on public.arts, public.behandelingen, public.beschikbaarheid, public.reserveringen
+    to anon;
+grant select, insert, update, delete on public.arts, public.behandelingen, public.beschikbaarheid, public.reserveringen
+    to authenticated, service_role;
 
 -- -----------------------------------------------------------------------------
 -- Functies (aan te roepen via supabase.rpc)

@@ -2,14 +2,13 @@
 -- Inloggen voor artsen: de basis
 --
 -- Deze migratie krijg je kant-en-klaar. Ze regelt:
---   1. de koppeling tussen een arts en een account in Supabase Auth (user_id);
---   2. een trigger die bij elke registratie automatisch een arts aanmaakt;
---   3. de openbare kant van de site: bezoekers mogen behandelingen lezen en
---      via twee functies vrije tijden opvragen en boeken;
---   4. één voorbeeld-policy: een arts mag zijn eigen gegevens lezen.
+--   1. de koppeling tussen een arts en een account in Supabase Auth (user_id),
+--      en een trigger die bij elke registratie automatisch een arts aanmaakt;
+--   2. twee functies waarmee bezoekers vrije tijden opvragen en een afspraak
+--      maken, zonder zelf in de tabellen te hoeven lezen of schrijven.
 --
--- De policies voor beschikbaarheid en reserveringen schrijf je zelf, in de
--- migratie rls_opdracht (opdracht 5).
+-- Row Level Security staat nog UIT. RLS aanzetten en de policies schrijven doe
+-- je zelf in Supabase (stap 3 en 4 van de opdracht).
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
@@ -23,10 +22,16 @@ alter table public.arts
 alter table public.arts
     add constraint arts_type_check check (type in ('tandarts', 'mondhygiënist'));
 
+create index arts_user_id_idx on public.arts (user_id);
+
+-- Let op (stap 3): deze trigger maakt nu van ELKE nieuwe gebruiker een arts.
+-- Pas hem aan zodra je meer rollen hebt, zoals de receptionist.
+--
 -- Maakt bij elke registratie automatisch de bijbehorende arts aan, met de
 -- naam en functie die de app als metadata meestuurt bij signUp().
--- SECURITY DEFINER: de trigger draait als eigenaar van de functie, want de
--- nieuwe gebruiker zelf mag (via RLS) niets in `arts` schrijven.
+-- SECURITY DEFINER: de functie draait met de rechten van haar eigenaar, niet
+-- met die van de nieuwe gebruiker. Zo blijft de trigger werken als jij straks
+-- met RLS dichtzet wie er in `arts` mag schrijven.
 create or replace function public.maak_arts_voor_nieuwe_gebruiker()
 returns trigger
 language plpgsql
@@ -48,42 +53,18 @@ create trigger maak_arts_na_registratie
     after insert on auth.users
     for each row execute function public.maak_arts_voor_nieuwe_gebruiker();
 
+-- De trigger-functie hoeft door niemand rechtstreeks aangeroepen te worden.
+revoke execute on function public.maak_arts_voor_nieuwe_gebruiker() from public, anon, authenticated;
+
 -- -----------------------------------------------------------------------------
--- 2. Policies
+-- 2. Functies voor bezoekers
 --
--- RLS staat al aan op alle tabellen (zie de eerste migratie). Zonder policy
--- mag niemand iets; elke policy hieronder zet precies één ding open.
--- -----------------------------------------------------------------------------
-
--- Behandelingen zijn openbaar: iedereen mag ze lezen.
-create policy "Iedereen kan behandelingen lezen"
-    on public.behandelingen for select
-    to anon, authenticated
-    using (true);
-
--- Voorbeeld voor opdracht 5. Een ingelogde arts ziet alleen zijn eigen rij:
---   to authenticated     alleen voor ingelogde gebruikers
---   for select           alleen lezen
---   using (...)          deze voorwaarde moet waar zijn voor elke rij die je ziet
--- auth.uid() is het id van de ingelogde gebruiker. `(select auth.uid())` in
--- plaats van `auth.uid()`: dan rekent Postgres de waarde één keer per query uit
--- in plaats van per rij (aanbeveling van Supabase).
-create policy "Arts leest eigen gegevens"
-    on public.arts for select
-    to authenticated
-    using (user_id = (select auth.uid()));
-
-create index arts_user_id_idx on public.arts (user_id);
-
--- -----------------------------------------------------------------------------
--- 3. Functies voor bezoekers
---
--- Bezoekers mogen de tabellen beschikbaarheid en reserveringen niet lezen
--- (daar staan namen en e-mailadressen in). De functies draaien daarom als
--- SECURITY DEFINER: ze lezen alles wat nodig is, maar geven alleen vrije
+-- In beschikbaarheid en reserveringen staan namen en e-mailadressen. Bezoekers
+-- horen die tabellen straks niet te kunnen lezen. Deze twee functies draaien
+-- daarom als SECURITY DEFINER: ze lezen wat nodig is, maar geven alleen vrije
 -- tijden terug of maken precies één, volledig gecontroleerde reservering.
--- `set search_path = ''` (al in de vorige migratie) voorkomt dat iemand via
--- een eigen schema een functie of tabel kan onderschuiven.
+-- `set search_path = ''` (in de eerste migratie) voorkomt dat iemand via een
+-- eigen schema een functie of tabel kan onderschuiven.
 -- -----------------------------------------------------------------------------
 
 alter function public.beschikbare_tijden(text, date, integer) security definer;
@@ -91,6 +72,3 @@ alter function public.boek_afspraak(text, date, time, text, text) security defin
 
 grant execute on function public.beschikbare_tijden(text, date, integer) to anon, authenticated;
 grant execute on function public.boek_afspraak(text, date, time, text, text) to anon, authenticated;
-
--- De trigger-functie hoeft door niemand rechtstreeks aangeroepen te worden.
-revoke execute on function public.maak_arts_voor_nieuwe_gebruiker() from public, anon, authenticated;

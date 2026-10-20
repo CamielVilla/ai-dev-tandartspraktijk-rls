@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars -- startpunt: deze imports en helpers gebruik je in opdracht 1. Haal deze regel weg als je klaar bent. */
+/* eslint-disable @typescript-eslint/no-unused-vars -- startpunt: deze imports en helpers gebruik je in stap 2. Haal deze regel weg als je klaar bent. */
 "use server";
 
 import {headers} from "next/headers";
@@ -44,7 +44,7 @@ export async function registreer(
         return {status: "error", veldFouten, invoer};
     }
 
-    // TODO opdracht 1: registreer de arts bij Supabase.
+    // TODO stap 2: registreer de gebruiker bij Supabase.
     //  - Maak een client met createSupabaseServerClient().
     //  - Gebruik de juiste functie van supabase.auth om een account aan te maken.
     //  - Stuur naam en type mee als metadata (options.data). De database-trigger
@@ -63,7 +63,7 @@ export async function registreer(
     return {
         status: "error",
         veldFouten: {},
-        melding: "Registreren is nog niet gebouwd (opdracht 1).",
+        melding: "Registreren is nog niet gebouwd (stap 2).",
         invoer,
     };
 }

@@ -24,15 +24,14 @@ Row Level Security staat nog **uit**. Op dit moment kan iedereen met de publisha
 
 ## Voorbereiding
 
-1. Maak een project aan op [supabase.com](https://supabase.com).
-2. Voer in de **SQL Editor** uit, in deze volgorde:
-   1. `supabase/migrations/20261014120000_afspraken_schema.sql`
-   2. `supabase/migrations/20261020120000_auth_basis.sql`
-   3. `supabase/seed.sql`
-3. Zet onder **Authentication > URL Configuration** de *Site URL* op `http://localhost:3000` en voeg `http://localhost:3000/**` toe aan de *Redirect URLs*.
-4. Zet onder **Authentication > Sign In / Providers > Email** de optie *Confirm email* uit. Dan ben je na registreren direct ingelogd en hoef je tijdens het ontwikkelen niet op mails te wachten.
-5. Kopieer `.env.example` naar `.env.local` en vul de project-URL en de **publishable key** in (Project Settings > API Keys).
-6. `npm install` en `npm run dev`. Het maken van een afspraak via `/afspraken` werkt nu al. `/registreren` en `/inloggen` geven een melding dat ze nog niet gebouwd zijn.
+Je gaat verder met je Supabase-project en de koppeling uit les 7: dezelfde tabellen, dezelfde testgegevens en dezelfde `.env.local`. Wat er voor deze les bij komt:
+
+1. Voer in de **SQL Editor** `supabase/migrations/20261020120000_auth_basis.sql` uit.
+2. Zet onder **Authentication > URL Configuration** de *Site URL* op `http://localhost:3000` en voeg `http://localhost:3000/**` toe aan de *Redirect URLs*.
+3. Zet onder **Authentication > Sign In / Providers > Email** de optie *Confirm email* uit. Dan ben je na registreren direct ingelogd en hoef je tijdens het ontwikkelen niet op mails te wachten.
+4. `npm install` en `npm run dev`. Het maken van een afspraak via `/afspraken` werkt nu al. `/registreren` en `/inloggen` geven een melding dat ze nog niet gebouwd zijn.
+
+> Begin je met een nieuw Supabase-project? Voer dan vóór stap 1 eerst `supabase/migrations/20261014120000_afspraken_schema.sql` en `supabase/seed.sql` uit (de database van les 7), en vul `.env.local` met de url en de publishable key van je project (zie `.env.example`).
 
 ## Opdracht
 
@@ -193,19 +192,11 @@ where naam = 'Dr. S. Jansen';
 commit;
 ```
 
-### Datamodel
-
-Het schema volgt het ERD: `arts`, `behandelingen`, `beschikbaarheid` en `reserveringen`. Afwijkingen:
-- `clienten` ontbreekt nog (zie de bonus in stap 1). Tot die tijd staan `naam` en `email` van de patiënt direct in `reserveringen`.
-- `behandelingen` heeft een extra kolom `slug` voor de url (`/afspraken/maken/bleken`).
-- `arts` heeft een extra kolom `user_id`: de koppeling met het account in Supabase Auth.
-
 ### Structuur
 
 | Bestand | Verantwoordelijkheid |
 |---|---|
-| `supabase/migrations/*.sql` | Tabellen, functies en de registratie-trigger. Hier komt ook de SQL van jouw rollen en policies. |
-| `supabase/seed.sql` | Testdata: twee artsen, drie behandelingen, beschikbaarheid in september 2026 |
+| `supabase/migrations/20261020120000_auth_basis.sql` | Koppeling tussen arts en account (`arts.user_id`), de registratie-trigger en de functies voor bezoekers. Zet de SQL van jouw rollen en policies in een nieuw bestand ernaast. |
 | `proxy.ts` + `lib/supabase/proxy.ts` | Ververst de sessie-cookies voordat een pagina rendert |
 | `lib/supabase/server.ts` | Client mét de sessie van de gebruiker (voor inloggen en beveiligde data) |
 | `lib/supabase/public.ts` | Client zonder sessie (voor openbare data, ook tijdens `next build`) |
@@ -213,4 +204,3 @@ Het schema volgt het ERD: `arts`, `behandelingen`, `beschikbaarheid` en `reserve
 | `app/inloggen`, `app/registreren` | Formulieren en Server Actions voor inloggen, uitloggen en registreren |
 | `app/auth/callback/route.ts` | Verwerkt de link uit de bevestigingsmail |
 | `app/mijn-afspraken/page.tsx` | Overzicht van de afspraken van de ingelogde arts |
-| `lib/behandelingen.ts`, `lib/afspraken.ts` | Data ophalen en afspraken boeken |

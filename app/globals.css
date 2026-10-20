@@ -430,6 +430,204 @@ nav ul a:hover {
     color: var(--color-turquoise);
 }
 
+/* ------------------------------- 4.5 Login ------------------------------- */
+
+.login-container {
+    max-width: 440px;
+    margin: 50px auto;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.login-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.login-form label {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--color-text);
+}
+
+.login-form input,
+.login-form select {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background-color: var(--color-white);
+    color: var(--color-text);
+    font: inherit;
+    transition: border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.login-form input[aria-invalid="true"],
+.login-form select[aria-invalid="true"] {
+    border-color: var(--color-pink);
+}
+
+.login-form input:focus,
+.login-form select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(61, 78, 198, 0.12);
+}
+
+.login-form input::placeholder {
+    color: var(--color-text-light);
+    opacity: 0.7;
+}
+
+.login-form button {
+    width: 100%;
+    margin-top: 8px;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 10px;
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.login-form button:hover {
+    background-color: var(--color-primary-dark);
+    transform: translateY(-2px);
+}
+
+.login-form button:focus-visible {
+    outline: 3px solid var(--color-turquoise);
+    outline-offset: 3px;
+}
+
+.login-form .form-hint {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-text-light);
+}
+
+.login-wissel {
+    margin-top: 24px;
+    text-align: center;
+    color: var(--color-text-light);
+}
+
+.login-wissel a {
+    color: var(--color-primary);
+    font-weight: 700;
+}
+
+.login-bevestiging {
+    padding: 24px;
+    border: 1px solid #b9e6dd;
+    border-radius: 16px;
+    background-color: #e9f8f5;
+}
+
+.login-bevestiging h2 {
+    margin-top: 0;
+}
+
+.uitlog-knop {
+    padding: 10px 18px;
+    border: 1px solid var(--color-primary);
+    border-radius: 10px;
+    background-color: var(--color-white);
+    color: var(--color-primary);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.uitlog-knop:hover {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.login-form button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+
+/* ------------------------------- 4.6 Mijn afspraken ------------------------------- */
+
+.afspraken-overzicht {
+    margin: 30px 0;
+}
+
+.afspraken-aantal {
+    color: var(--color-text-light);
+    font-weight: 500;
+}
+
+.afspraken-dag {
+    margin-bottom: 20px;
+}
+
+.afspraken-dag h3 {
+    margin-top: 0;
+}
+
+.afspraken-dag h3::first-letter {
+    text-transform: uppercase;
+}
+
+.afspraken-lijst {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.afspraken-lijst li {
+    display: grid;
+    grid-template-columns: 120px 1fr auto;
+    gap: 16px;
+    align-items: center;
+    padding: 12px 0;
+    border-top: 1px solid var(--color-border);
+}
+
+.afspraken-lijst li:first-child {
+    border-top: none;
+}
+
+.afspraak-tijd {
+    color: var(--color-primary);
+    font-weight: 700;
+}
+
+.afspraak-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.afspraak-details span {
+    color: var(--color-text-light);
+}
+
+.afspraak-email {
+    color: var(--color-text-light);
+}
+
+@media (max-width: 600px) {
+    .afspraken-lijst li {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+}
 
 /* ------------------------------- 5. Media Queries -------------------------------- */
 

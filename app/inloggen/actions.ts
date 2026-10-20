@@ -1,0 +1,49 @@
+/* eslint-disable @typescript-eslint/no-unused-vars -- startpunt: deze imports en helpers gebruik je in opdracht 2 en 4. Haal deze regel weg als je klaar bent. */
+"use server";
+
+import {redirect} from "next/navigation";
+import {createSupabaseServerClient} from "@/lib/supabase/server";
+import {leesTekst} from "@/lib/validatie";
+
+export type LoginResultaat =
+    | { status: "idle" }
+    | { status: "error"; melding: string; email: string };
+
+export async function login(_vorigResultaat: LoginResultaat, formData: FormData): Promise<LoginResultaat> {
+    const email = leesTekst(formData, "email").trim().toLowerCase();
+    const password = leesTekst(formData, "password");
+
+    if (!email || !password) {
+        return {status: "error", melding: "Vul je e-mailadres en wachtwoord in.", email};
+    }
+
+    // TODO opdracht 2: log de arts in bij Supabase.
+    //  - Maak een client met createSupabaseServerClient(). Die zet na het inloggen
+    //    automatisch de sessie-cookies.
+    //  - Gebruik de juiste functie van supabase.auth om in te loggen met e-mail en wachtwoord.
+    //  - Gaat het mis? Geef dan een foutresultaat terug. loginFoutmelding()
+    //    hieronder vertaalt de foutcode van Supabase naar een nette Nederlandse melding.
+    //  - Gaat het goed? Stuur de arts dan door naar /mijn-afspraken.
+    return {status: "error", melding: "Inloggen is nog niet gebouwd (opdracht 2).", email};
+}
+
+export async function uitloggen(): Promise<void> {
+    // TODO opdracht 4: log de arts uit bij Supabase. Daarmee worden ook de sessie-cookies verwijderd.
+
+    redirect("/inloggen");
+}
+
+function loginFoutmelding(code: string | undefined): string {
+    switch (code) {
+        case "invalid_credentials":
+            // Bewust niet zeggen wát er fout is: anders kun je uitzoeken welke
+            // e-mailadressen een account hebben.
+            return "E-mailadres of wachtwoord klopt niet.";
+        case "email_not_confirmed":
+            return "Bevestig eerst je e-mailadres via de link in de e-mail die je hebt ontvangen.";
+        case "over_request_rate_limit":
+            return "Te veel pogingen. Wacht even en probeer het opnieuw.";
+        default:
+            return "Inloggen is niet gelukt. Probeer het later opnieuw.";
+    }
+}

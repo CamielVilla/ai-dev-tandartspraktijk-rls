@@ -12,8 +12,10 @@ import {isGeldigeAfspraakDatum} from "@/lib/datum";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
+
     const behandeling = request.nextUrl.searchParams.get("behandeling");
     const datum = request.nextUrl.searchParams.get("datum");
+
 
     if (!behandeling || !datum) {
         return Response.json({error: "behandeling en datum zijn verplicht."}, {status: 400});
@@ -26,6 +28,7 @@ export async function GET(request: NextRequest) {
     if (!(await getBehandeling(behandeling))) {
         return Response.json({error: "Onbekende behandeling."}, {status: 404});
     }
+
 
     return Response.json(
         {tijden: await getBeschikbareTijden(behandeling, datum)},

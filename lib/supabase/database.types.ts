@@ -12,16 +12,19 @@ export type Database = {
             arts: {
                 Row: {
                     id: number;
+                    user_id: string | null;
                     naam: string;
                     type: string;
                 };
                 Insert: {
                     id?: never;
+                    user_id?: string | null;
                     naam: string;
                     type: string;
                 };
                 Update: {
                     id?: never;
+                    user_id?: string | null;
                     naam?: string;
                     type?: string;
                 };

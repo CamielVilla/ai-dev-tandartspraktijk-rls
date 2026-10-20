@@ -9,41 +9,107 @@ Ook wil je niet het risico lopen dat iemand ongewenste wijzigingen aan zou breng
 
 Er zou een database moeten zijn waarin nieuwe afspraken worden opgeslagen en eerdere afspraken opgehaald kunnen worden.
 
-## Opzet met Supabase
+## Les: inloggen, registreren, uitloggen en RLS
 
-### Starten
+In deze les krijgen artsen een eigen account. Een arts registreert zich, logt in, ziet op `/mijn-afspraken` alleen zijn eigen afspraken en kan weer uitloggen. De database zorgt ervoor dat een arts nooit bij de afspraken van een collega kan, ook niet als er een fout in de app zit.
+
+De formulieren, de pagina's en de Supabase-clients staan al klaar. Jij schrijft de aanroepen naar Supabase Auth en de RLS-policies. Zoek in de code naar `TODO opdracht` om te zien waar je moet beginnen.
+
+### Voorbereiding
 1. Maak een project aan op [supabase.com](https://supabase.com).
-2. Voer in de **SQL Editor** eerst `supabase/migrations/20261014120000_afspraken_schema.sql` uit en daarna `supabase/seed.sql`.
-3. Kopieer `.env.example` naar `.env.local` en vul de project-URL en de **secret key** in (Project Settings > API Keys).
-4. `npm install` en `npm run dev`.
+2. Voer in de **SQL Editor** uit, in deze volgorde:
+   1. `supabase/migrations/20261014120000_afspraken_schema.sql`
+   2. `supabase/migrations/20261020120000_auth_basis.sql`
+   3. `supabase/seed.sql`
+
+   De migratie `20261020130000_rls_opdracht.sql` bewaar je voor opdracht 5.
+3. Zet onder **Authentication > URL Configuration** de *Site URL* op `http://localhost:3000` en voeg `http://localhost:3000/**` toe aan de *Redirect URLs*.
+4. Zet onder **Authentication > Sign In / Providers > Email** de optie *Confirm email* uit. Dan ben je na registreren direct ingelogd en hoef je tijdens het ontwikkelen niet op mails te wachten.
+5. Kopieer `.env.example` naar `.env.local` en vul de project-URL en de **publishable key** in (Project Settings > API Keys).
+6. `npm install` en `npm run dev`. Het maken van een afspraak via `/afspraken` werkt nu al. `/inloggen` en `/registreren` geven nog een melding dat ze niet gebouwd zijn.
+
+Lees de [Supabase-documentatie over Auth met Next.js](https://supabase.com/docs/guides/auth/server-side/nextjs) en de [documentatie over Row Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security) voordat je begint.
+
+> Wat is het verschil tussen *authenticatie* en *autorisatie*? Welke van de twee regelt Supabase Auth, en welke regelt RLS?
+
+### Opdracht 1: Registreren
+`app/registreren/actions.ts`
+
+Maak een account aan via Supabase Auth. Stuur de naam en functie van de arts mee; de database maakt daarmee automatisch een rij in `arts` aan (zie de trigger in de migratie `auth_basis`).
+
+Klaar als: na registreren staat de nieuwe gebruiker onder **Authentication > Users** en staat er een bijbehorende rij in de tabel `arts`.
+
+> Waarom geeft Supabase geen foutmelding als je registreert met een e-mailadres dat al bestaat en *Confirm email* aan staat?
+
+### Opdracht 2: Inloggen
+`app/inloggen/actions.ts`
+
+Log de arts in met e-mailadres en wachtwoord en handel de fouten netjes af.
+
+Klaar als: met een fout wachtwoord zie je "E-mailadres of wachtwoord klopt niet." In de developer tools van je browser zie je na inloggen cookies die beginnen met `sb-`.
+
+### Opdracht 3: Wie is er ingelogd?
+`lib/auth.ts`
+
+Zoek uit welke gebruiker er bij de huidige request hoort, en welke arts daarbij hoort.
+
+Klaar als: je na inloggen op `/mijn-afspraken` terechtkomt met "Welkom, <jouw naam>", en `/inloggen` je doorstuurt zolang je bent ingelogd.
+
+> Waarom mag je op de server niet vertrouwen op `getSession()`?
+
+### Opdracht 4: Uitloggen
+`app/inloggen/actions.ts`
+
+Klaar als: na uitloggen `/mijn-afspraken` je weer naar `/inloggen` stuurt.
+
+### Opdracht 5: Row Level Security
+`supabase/migrations/20261020130000_rls_opdracht.sql`
+
+Koppel je account aan een arts uit de seed (zie hieronder) en maak als bezoeker een afspraak bij hem. Je zult zien dat `/mijn-afspraken` toch leeg blijft. Schrijf de policies die ervoor zorgen dat een arts zijn eigen beschikbaarheid en reserveringen kan lezen, en die van collega's niet.
+
+| Wie | Mag |
+|---|---|
+| Bezoeker (niet ingelogd) | Behandelingen lezen, vrije tijden opvragen en boeken (alleen via de functies `beschikbare_tijden()` en `boek_afspraak()`) |
+| Ingelogde arts | Eigen gegevens, eigen beschikbaarheid en eigen reserveringen lezen |
+| Niemand | Rechtstreeks schrijven in de tabellen |
+
+Klaar als: twee ingelogde artsen elk alleen hun eigen afspraken zien.
+
+> De pagina filtert in de code al op `arts_id`. Waarom heb je RLS dan toch nodig? Wat kan iemand met de publishable key uit je JavaScript-bundle?
+
+### Een account koppelen aan een arts uit de seed
+Bij registratie maakt de database een nieuwe, lege arts aan. Wil je inloggen als een arts uit de seed (met beschikbaarheid)? Registreer dan eerst en voer daarna in de SQL Editor uit:
+
+```sql
+begin;
+delete from public.arts
+where user_id = (select id from auth.users where email = 'jouw@email.nl');
+
+update public.arts
+set user_id = (select id from auth.users where email = 'jouw@email.nl')
+where naam = 'Dr. S. Jansen';
+commit;
+```
 
 ### Datamodel
-Het schema volgt het ERD: `arts`, `behandelingen`, `beschikbaarheid` en `reserveringen`. Tijdelijke afwijkingen:
-- `clienten` ontbreekt nog. Tot inloggen er is, staan `naam` en `email` direct in `reserveringen`; die worden later `client_id`.
+Het schema volgt het ERD: `arts`, `behandelingen`, `beschikbaarheid` en `reserveringen`. Afwijkingen:
+- `clienten` ontbreekt nog. Patiënten hoeven niet in te loggen, dus `naam` en `email` staan direct in `reserveringen`.
 - `behandelingen` heeft een extra kolom `slug` voor de url (`/afspraken/maken/bleken`).
+- `arts` heeft een extra kolom `user_id`: de koppeling met het account in Supabase Auth.
 
 ### Structuur
 | Bestand | Verantwoordelijkheid |
 |---|---|
-| `supabase/migrations/*.sql` | Tabellen, constraints, RLS en de functies `beschikbare_tijden` en `boek_afspraak` |
+| `supabase/migrations/*.sql` | Tabellen, functies, de registratie-trigger en de policies |
 | `supabase/seed.sql` | Testdata: twee artsen, drie behandelingen, beschikbaarheid in september 2026 |
-| `lib/supabase/server.ts` | Supabase-client voor de server (`server-only`) |
-| `lib/supabase/database.types.ts` | Types van het schema, voor autocomplete en typecontrole op queries |
-| `lib/behandelingen.ts` | Behandelingen ophalen |
-| `lib/afspraken.ts` | Vrije tijden ophalen en afspraken boeken |
-| `lib/datum.ts` | Datumhulpjes voor server en browser |
-| `app/api/behandelingen/route.ts` | `GET` behandelingen, statisch met revalidate van 1 uur |
-| `app/api/tijden/route.ts` | `GET` vrije tijden, nooit gecachet |
-| `app/afspraken/maken/[behandeling]/actions.ts` | Server Action: valideert invoer en boekt |
-| `components/afspraak/*` | `AfspraakPlanner` met `Kalender`, `TijdKeuze` en `AfspraakFormulier` |
-| `hooks/useBeschikbareTijden.ts` | Tijden ophalen met laad-/foutstatus en annuleren van verouderde requests |
-
-### Belangrijkste keuzes
-- **Logica in de database.** Of een tijd vrij is, hangt af van de beschikbaarheid van de artsen, de duur van de behandeling en bestaande reserveringen. `beschikbare_tijden()` rekent dat uit, en `boek_afspraak()` kiest een vrije arts en slaat de reservering op in één transactie.
-- **Dubbele boekingen zijn onmogelijk.** Een exclusion constraint verbiedt overlappende reserveringen per arts, ook bij gelijktijdige requests. De app vertaalt die fout naar "Dit tijdstip is helaas net vergeven".
-- **RLS staat al aan, zonder policies.** Met de publieke key is er dus niets te lezen of te schrijven. De server gebruikt voorlopig de secret key, die nooit in de browser komt. Bij inloggen komen hier policies en een client met de sessie van de gebruiker (`@supabase/ssr`).
-- **Geen `fetch` naar je eigen Route Handler vanuit een Server Component.** Pagina's lezen direct via `lib/`, zoals de Next.js-docs aanraden.
-- **Server valideert alles**, ook de verborgen velden: een Server Action is een publiek endpoint.
+| `proxy.ts` + `lib/supabase/proxy.ts` | Ververst de sessie-cookies voordat een pagina rendert |
+| `lib/supabase/server.ts` | Client mét de sessie van de bezoeker (voor inloggen en data van de arts) |
+| `lib/supabase/public.ts` | Client zonder sessie (voor openbare data, ook tijdens `next build`) |
+| `lib/auth.ts` | Wie is er ingelogd? `vereisIngelogdeArts()` voor beveiligde pagina's |
+| `app/inloggen`, `app/registreren` | Formulieren en Server Actions voor inloggen, uitloggen en registreren |
+| `app/auth/callback/route.ts` | Verwerkt de link uit de bevestigingsmail |
+| `app/mijn-afspraken/page.tsx` | Overzicht van de afspraken van de ingelogde arts |
+| `lib/behandelingen.ts`, `lib/afspraken.ts` | Data ophalen en afspraken boeken |
 
 ## Inleiding
 In deze opdracht ga je een bestaande Next.js-applicatie met Typescript verder uitbouwen voor Tandartspraktijk de

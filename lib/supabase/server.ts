@@ -1,37 +1,32 @@
 import "server-only";
-import {createClient, type SupabaseClient} from "@supabase/supabase-js";
+import {createServerClient} from "@supabase/ssr";
+import {cookies} from "next/headers";
 import type {Database} from "./database.types";
+import {supabasePublishableKey, supabaseUrl} from "./env";
 
 /**
- * Supabase-client voor gebruik op de server (Server Components, Route
- * Handlers en Server Actions).
+ * Supabase-client mét de sessie van de bezoeker (uit de cookies).
  *
- * Voorlopig met de secret key: die omzeilt RLS en mag daarom nooit in de
- * browser komen (`server-only` + geen NEXT_PUBLIC_-prefix). Zodra inloggen
- * er is, maken we per request een client met de sessie van de gebruiker
- * (@supabase/ssr) en bepalen RLS-policies wie wat mag.
+ * Gebruik deze voor alles wat met inloggen te maken heeft en voor data van
+ * de ingelogde arts: RLS bepaalt dan wat deze gebruiker mag zien.
+ * Maak per request een nieuwe client aan; deel hem nooit tussen requests.
  */
+export async function createSupabaseServerClient() {
+    const cookieStore = await cookies();
 
-let client: SupabaseClient<Database> | undefined;
-
-export function getSupabase(): SupabaseClient<Database> {
-    client ??= createClient<Database>(
-        leesEnv("NEXT_PUBLIC_SUPABASE_URL"),
-        leesEnv("SUPABASE_SECRET_KEY"),
-        {
-            auth: {
-                persistSession: false,
-                autoRefreshToken: false,
+    return createServerClient<Database>(supabaseUrl(), supabasePublishableKey(), {
+        cookies: {
+            getAll() {
+                return cookieStore.getAll();
             },
-        }
-    );
-    return client;
-}
-
-function leesEnv(naam: string): string {
-    const waarde = process.env[naam];
-    if (!waarde) {
-        throw new Error(`Omgevingsvariabele ${naam} ontbreekt. Zie .env.example.`);
-    }
-    return waarde;
+            setAll(cookiesToSet) {
+                try {
+                    cookiesToSet.forEach(({name, value, options}) => cookieStore.set(name, value, options));
+                } catch {
+                    // Aangeroepen vanuit een Server Component: die mag geen cookies
+                    // zetten. Geen probleem, want proxy.ts ververst de sessie al.
+                }
+            },
+        },
+    });
 }

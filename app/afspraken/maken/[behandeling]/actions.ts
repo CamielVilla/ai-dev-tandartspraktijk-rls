@@ -2,6 +2,7 @@
 
 import {boekAfspraak, OnbekendeBehandelingError, TijdNietBeschikbaarError} from "@/lib/afspraken";
 import {isGeldigeAfspraakDatum} from "@/lib/datum";
+import {isGeldigEmail, leesTekst} from "@/lib/validatie";
 
 type Veld = "naam" | "email";
 
@@ -20,8 +21,6 @@ export type AfspraakResultaat =
 };
 
 const NAAM_MAX_LENGTE = 100;
-const EMAIL_MAX_LENGTE = 254;
-const EMAIL_PATROON = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const TIJD_PATROON = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 /**
@@ -88,11 +87,6 @@ export async function maakAfspraakAction(
     }
 }
 
-function leesTekst(formData: FormData, veld: string): string {
-    const waarde = formData.get(veld);
-    return typeof waarde === "string" ? waarde : "";
-}
-
 function valideerContactgegevens({naam, email}: Record<Veld, string>): Partial<Record<Veld, string>> | null {
     const fouten: Partial<Record<Veld, string>> = {};
 
@@ -102,7 +96,7 @@ function valideerContactgegevens({naam, email}: Record<Veld, string>): Partial<R
         fouten.naam = `Uw naam mag maximaal ${NAAM_MAX_LENGTE} tekens zijn.`;
     }
 
-    if (email.length > EMAIL_MAX_LENGTE || !EMAIL_PATROON.test(email)) {
+    if (!isGeldigEmail(email)) {
         fouten.email = "Vul een geldig e-mailadres in.";
     }
 

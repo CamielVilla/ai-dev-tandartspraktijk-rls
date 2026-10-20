@@ -1,6 +1,6 @@
 import "server-only";
 import {cache} from "react";
-import {getSupabase} from "./supabase/server";
+import {getSupabasePublic} from "./supabase/public";
 
 export type Behandeling = {
     id: number;
@@ -16,7 +16,7 @@ export type Behandeling = {
  */
 
 export const getBehandelingen = cache(async (): Promise<Behandeling[]> => {
-    const {data, error} = await getSupabase()
+    const {data, error} = await getSupabasePublic()
         .from("behandelingen")
         .select("id, slug, type, duur")
         .order("id");
@@ -28,7 +28,7 @@ export const getBehandelingen = cache(async (): Promise<Behandeling[]> => {
 });
 
 export const getBehandeling = cache(async (slug: string): Promise<Behandeling | null> => {
-    const {data, error} = await getSupabase()
+    const {data, error} = await getSupabasePublic()
         .from("behandelingen")
         .select("id, slug, type, duur")
         .eq("slug", slug)

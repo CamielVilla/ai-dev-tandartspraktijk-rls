@@ -44,3 +44,23 @@ export function isGeldigeAfspraakDatum(datum: string): boolean {
 export function formatDatum(datum: string): string {
     return datumFormatter.format(new Date(`${datum}T00:00:00Z`));
 }
+
+const langeDatumFormatter = new Intl.DateTimeFormat("nl-NL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+});
+
+/** ISO-datum -> "maandag 14 september 2026". */
+export function formatDatumLang(datum: string): string {
+    return langeDatumFormatter.format(new Date(`${datum}T00:00:00Z`));
+}
+
+/** De datum van vandaag in Nederland als ISO-datum, bijv. "2026-10-20". */
+export function vandaagIsoDatum(): string {
+    // en-CA formatteert als JJJJ-MM-DD; de tijdzone voorkomt dat de server
+    // (vaak in UTC) rond middernacht de verkeerde dag kiest.
+    return new Intl.DateTimeFormat("en-CA", {timeZone: "Europe/Amsterdam"}).format(new Date());
+}

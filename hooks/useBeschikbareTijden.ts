@@ -43,7 +43,7 @@ export function useBeschikbareTijden(behandeling: string) {
             setState({status: "success", tijden: data.tijden});
         } catch (error) {
             if (controller.signal.aborted) {
-                return; // vervangen door een nieuwere aanvraag
+                return;
             }
             console.error(error);
             setState({status: "error", tijden: []});

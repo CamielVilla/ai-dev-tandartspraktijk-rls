@@ -9,6 +9,42 @@ Ook wil je niet het risico lopen dat iemand ongewenste wijzigingen aan zou breng
 
 Er zou een database moeten zijn waarin nieuwe afspraken worden opgeslagen en eerdere afspraken opgehaald kunnen worden.
 
+## Opzet met Supabase
+
+### Starten
+1. Maak een project aan op [supabase.com](https://supabase.com).
+2. Voer in de **SQL Editor** eerst `supabase/migrations/20261014120000_afspraken_schema.sql` uit en daarna `supabase/seed.sql`.
+3. Kopieer `.env.example` naar `.env.local` en vul de project-URL en de **secret key** in (Project Settings > API Keys).
+4. `npm install` en `npm run dev`.
+
+### Datamodel
+Het schema volgt het ERD: `arts`, `behandelingen`, `beschikbaarheid` en `reserveringen`. Tijdelijke afwijkingen:
+- `clienten` ontbreekt nog. Tot inloggen er is, staan `naam` en `email` direct in `reserveringen`; die worden later `client_id`.
+- `behandelingen` heeft een extra kolom `slug` voor de url (`/afspraken/maken/bleken`).
+
+### Structuur
+| Bestand | Verantwoordelijkheid |
+|---|---|
+| `supabase/migrations/*.sql` | Tabellen, constraints, RLS en de functies `beschikbare_tijden` en `boek_afspraak` |
+| `supabase/seed.sql` | Testdata: twee artsen, drie behandelingen, beschikbaarheid in september 2026 |
+| `lib/supabase/server.ts` | Supabase-client voor de server (`server-only`) |
+| `lib/supabase/database.types.ts` | Types van het schema, voor autocomplete en typecontrole op queries |
+| `lib/behandelingen.ts` | Behandelingen ophalen |
+| `lib/afspraken.ts` | Vrije tijden ophalen en afspraken boeken |
+| `lib/datum.ts` | Datumhulpjes voor server en browser |
+| `app/api/behandelingen/route.ts` | `GET` behandelingen, statisch met revalidate van 1 uur |
+| `app/api/tijden/route.ts` | `GET` vrije tijden, nooit gecachet |
+| `app/afspraken/maken/[behandeling]/actions.ts` | Server Action: valideert invoer en boekt |
+| `components/afspraak/*` | `AfspraakPlanner` met `Kalender`, `TijdKeuze` en `AfspraakFormulier` |
+| `hooks/useBeschikbareTijden.ts` | Tijden ophalen met laad-/foutstatus en annuleren van verouderde requests |
+
+### Belangrijkste keuzes
+- **Logica in de database.** Of een tijd vrij is, hangt af van de beschikbaarheid van de artsen, de duur van de behandeling en bestaande reserveringen. `beschikbare_tijden()` rekent dat uit, en `boek_afspraak()` kiest een vrije arts en slaat de reservering op in één transactie.
+- **Dubbele boekingen zijn onmogelijk.** Een exclusion constraint verbiedt overlappende reserveringen per arts, ook bij gelijktijdige requests. De app vertaalt die fout naar "Dit tijdstip is helaas net vergeven".
+- **RLS staat al aan, zonder policies.** Met de publieke key is er dus niets te lezen of te schrijven. De server gebruikt voorlopig de secret key, die nooit in de browser komt. Bij inloggen komen hier policies en een client met de sessie van de gebruiker (`@supabase/ssr`).
+- **Geen `fetch` naar je eigen Route Handler vanuit een Server Component.** Pagina's lezen direct via `lib/`, zoals de Next.js-docs aanraden.
+- **Server valideert alles**, ook de verborgen velden: een Server Action is een publiek endpoint.
+
 ## Inleiding
 In deze opdracht ga je een bestaande Next.js-applicatie met Typescript verder uitbouwen voor Tandartspraktijk de
 Tandenborstel. Die herken je misschien nog wel! Je gaat onder andere werken met routing, nested routes, dynamic routes en Client Components.

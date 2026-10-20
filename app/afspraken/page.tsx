@@ -19,7 +19,7 @@ export default function Afspraak() {
                 <article className="card">
                     <h3>Telefonisch</h3>
                     <p>U kunt ons tijdens openingstijden telefonisch bereiken.</p>
-                    <strong>{process.env.NEXT_PUBLIC_PRAKTIJK_TELEFOONNUMMER}</strong>
+                    <strong>030 - 123 45 67</strong>
                 </article>
 
                 <article className="card">
